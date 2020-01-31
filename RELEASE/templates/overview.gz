@@ -1,0 +1,194 @@
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Lato|Roboto|Work+Sans:500&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> IOT Weather System</title>
+    <style>
+        html,body{
+            width:100%;
+            height:100%;
+            padding:0;
+            margin:0;
+            overflow: hidden;
+        }
+        h2,h5,p{
+            padding:0;
+            margin:0;
+        }
+        .overview{
+            height:65%;
+            width:100%;
+        }
+        .overview .page-title{
+            width:50%;
+            height:20%;
+            font-family:"Roboto";
+            font-size:150%;
+            margin-top:2%;
+            margin-left:4%;
+        }
+        .page-title h2{
+            font-weight: bolder;
+        }
+        .page-title h5{
+            font-weight: lighter;
+        }
+        .overview .info{
+            height:65%;
+            width:90%;
+            margin:auto;
+            font-family: "Lato";
+            display:flex;
+            flex-direction: column;
+            justify-content: space-between;
+
+        }
+        .overview .info .row{
+            height:45%;
+            display:flex;
+            justify-content: space-between;
+        }
+        .block{
+            width:25%;
+            height:100%;
+            display:flex;
+            align-items: center;
+            justify-content: space-evenly;
+        }
+        .overview .info .row  .block .text{
+            width:55%;
+        }
+        .overview .info .row  .block .text h2{
+            margin-bottom: 1.5%;
+        }
+        .overview .info .row  .block .text p{
+            color: 	rgb(104,104,104);
+        }
+        .overview .info .row  .block img{
+            height:40%;
+        }
+    </style>
+</head>
+<body>
+    {% include "navbar.gz" %}
+    <div class="overview">
+        <div class="page-title">
+            <h2>Overview</h2>
+            <h5>Weather Now</h5>
+        </div>
+        <!-- Table containing variables annd values-->
+        <div class="info">
+            <!-- ROW 1 -->
+            <div class="row">
+                <!-- First Block -->
+                <div class="block">
+                    <img class="icon" src="{{ url_for('static',filename='icon/temp.png') }}"/>
+                    <div class="text">
+                        <h2 class="label">Temperature</h2>
+                        <p class="value"><span id="tempC">{{tempC}}</span> | <span id="tempF">{{tempF}}</span></p>
+                    </div>
+                </div>
+                <!-- Second Block -->
+                <div class="block">
+                    <img class="icon" src="{{ url_for('static',filename='icon/pressure.png') }}"/>
+                    <div class="text">
+                        <h2 class="label">Pressure</h2>
+                        <p class="value" id="press">{{press}}</p>
+                    </div>
+                </div>
+                <!-- Third Block -->
+                <div class="block">
+                    <img class="icon" src="{{ url_for('static',filename='icon/humidity.png') }}"/>
+                    <div class="text">
+                        <h2 class="label">Humidity</h2>
+                        <p class="value" id="hum">{{hum}}</p>
+                    </div>
+                </div>
+            </div>
+            <!-- ROW 2 -->
+            <div class="row">
+                <!-- First Block -->
+                <div class="block">
+                    <img class="icon" src="{{ url_for('static',filename='icon/precipitation.png') }}"/>
+                    <div class="text">
+                        <h2 class="label">Precipitation</h2>
+                        <p class="value" id="precip">{{precip}}</p>
+                    </div>
+                </div>
+                <!-- Second Block -->
+                <div class="block">
+                    <img class="icon" src="{{ url_for('static',filename='icon/windspeed.png') }}"/>
+                    <div class="text">
+                        <h2 class="label">Wind Speed</h2>
+                        <p class="value"id="wind_spd">{{wind_spd}}</p>
+                    </div>
+                </div>
+                <!-- Third Block -->
+                <div class="block">
+                    <img style="transition:transform 1s;" id="dirIcon" class="icon" src="{{ url_for('static',filename='icon/winddirection.png') }}"/>
+                    <div class="text">
+                        <h2 class="label">Wind Direction</h2>
+                        <p class="value"><span id="wind_dir">{{wind_dir}}</span> | <span id="wind_dir_parsed"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var data ={
+            "tempC": {{tempC}},
+            "tempF": {{tempF}},
+            "wind_spd": {{wind_spd}},
+            "wind_dir": {{wind_dir}},
+            "hum": {{hum}},
+            "press": {{press}},
+            "precip": {{precip}}
+        }
+        
+        appendUnit();
+        $("#wind_dir_parsed").html(convertCW(parseInt(data["wind_dir"])));
+        $("#dirIcon").css("transform", "rotateZ("+parseInt(data["wind_dir"])+ "deg)")
+        var socket=  io.connect("http://"+document.domain+":"+location.port+"/14yhtZxLNp6ekZAgmEmPJqEKUP2VtUxQK6")
+        socket.on("0x5Df9eBcFB2D0f3315d03Ac112104b9023C409dc1", (msg)=>{
+            console.log("msg received:")
+            console.log(msg)
+            if(msg["data"][0]=="tempC") $("#largetempC").html(msg["data"][1]);
+            else if (msg["data"][0]=="wind_dir")  $("#dirIcon").css("transform", "rotateZ("+msg["data"][1]+ "deg)")
+            $("#"+msg["data"][0]).html(msg["data"][1]);
+            data[msg["data"][0]]= msg["data"][1]
+        appendUnit(msg["data"][0])
+        })
+        function appendUnit(id=0){
+            let unitHash = {
+                "tempC": "&deg;C",
+                "tempF": "&deg;F",
+                "press": "bar",
+                "hum": "Rh",
+                "precip": "mm",
+                "wind_spd": "m/s",
+                "wind_dir": "cw",
+            }
+            if(id) $("#"+id).html($("#"+id).html()+ " "  + unitHash[id])
+            else for(id in unitHash){
+                $("#"+id).html($("#"+id).html()+ " "  + unitHash[id])
+            }
+        }
+        function convertCW(angle){
+            let angleMod = angle%90
+            let quadrant = Math.floor(angle/90)
+            console.log(quadrant)
+            let quadrantHash = ["N","E","S","W","N"]
+            let final;
+            if(angleMod==0) final = quadrantHash[quadrant]
+            else{
+                if(quadrant%2==0) final =  String((90-angleMod)) + " " + quadrantHash[quadrant] + " of " +quadrantHash[quadrant+1]
+                else  final =  String(angleMod) + " " + quadrantHash[quadrant+1] + " of " +quadrantHash[quadrant]
+            }
+            return final
+        }
+        $("body").on('DOMSubtreeModified', "#wind_dir", ()=>{
+            $("#wind_dir_parsed").html(convertCW(parseInt(data["wind_dir"])));
+        });
+    </script>
+</body>
+</html>

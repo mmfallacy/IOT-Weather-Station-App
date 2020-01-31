@@ -1,0 +1,153 @@
+<div class="navbar">
+    <script src="{{url_for('static' ,filename='lib/jquery-3.4.1.js')}}"> </script>
+    <script src="{{url_for('static' ,filename='lib/Chart.min.js')}}"> </script>
+    <script src="{{url_for('static' ,filename='lib/socket.io.js')}}"> </script>
+    <style type="text/css" scoped>
+        .navbar{
+            height:15vw;
+            background-color: purple;
+            position:relative;
+            color: white;
+            font-family: "Work Sans";
+            overflow:hidden;
+            box-shadow: 0px 2px 4px black;
+        }
+        *{
+            margin:0;
+            padding:0;
+            z-index: 2;
+        }
+        .avetemp{
+            font-size:500%;
+            width:30%;
+            position:relative;
+            top:7.5%;
+            left:2.5%;
+        }
+        .avetemp .unit{
+            font-size:30%;
+            font-family: "Lato";
+            font-weight: bold;
+            position: absolute;
+            top:15%;
+        }
+        .tempbot{
+            font-size:125%;
+            font-family:"Lato";
+            width: 30%;
+            position: relative;
+            margin-top:2%;
+            left:2.5%;
+            box-sizing: border-box;
+        }
+        .tempbot .spacer{
+            margin: 0% 5%;
+        }
+        .page-selector{
+            width: 50%;
+            height:33%;
+            position: absolute;
+            top: 15%;
+            left:25%;
+            font-weight:lighter;
+            font-size: 125%;    
+            display:flex;
+            justify-content: space-evenly;
+        }
+        .page-selector a{
+            display:flex; 
+            flex-direction: column;
+            align-items: center;
+            color:white;
+            text-decoration: none;
+        }
+        .page-selector a:visited{
+            color:white;
+            text-decoration: none;
+        }
+        .page-selector a img{
+            height: 55%;
+        }
+        a div{
+            border-radius: 50%;
+            border:3px solid white;
+            height:40px;
+            width:40px;
+            display:flex;
+            flex-direction:column;
+            justify-content: space-around;
+            align-items: center;
+            background-color:transparent;
+        }
+        a div.a{{xpage}}{
+            background-color:orange;
+        }
+        .time{
+            position:absolute;
+            right:2.5%;
+            bottom:7.5%;
+            height:5vw;
+            width:16%;
+            display:flex;
+        }
+        div.time h1#hour{
+            font-size:500%;
+            margin-top:-7%;
+            
+        }
+        div.time h4#min,div.time h4#sec,div.time h4.sep{
+            font-size:180%;
+            margin-left:3%;
+        }
+        div.time div#date{
+            position: absolute;
+            left:43%;
+            bottom:7.5%;
+            font-size:120%;
+        }
+        img#navbarbg{
+            position:absolute;
+            width:100%;
+            left:0;
+            top:0;
+            z-index: 1;
+        }
+    </style>
+    <div class="avetemp"><span id="largetempC">{{tempC}}</span><span class="unit">&deg;&nbsp;C</span></div>
+    <div class="tempbot">
+        <span id="city">{{loc[0]}}</span><span class='spacer'>&bull;</span><span id="region">{{loc[1]}}</span><span class='spacer'>&bull;</span><span id="country">{{loc[2]}}</span>
+    </div>
+    <div class="page-selector">
+        <a href="/"><div class="aoverview"><img style="transform:scale(1.1,1.1);margin-left:1.5%;margin-top:4%;" src="{{url_for('static',filename='Overview.png')}}"/></div>Overview</a>
+        <a href="/details"><div class="adetails"><img style="margin-bottom:5%;" src="{{url_for('static',filename='Details.png')}}"/></div>Details</a>
+    </div>
+    <div class="time">
+        <h1 id="hour">00</h1> <h4 class="sep">:</h4>
+        <h4 id="min">00</h4> <h4 class="sep">:</h4>
+        <h4 id="sec">00</h4>
+        <div id="date">Jan 1 1999</div>
+    </div>
+    <img id="navbarbg"/>
+    <script>
+        function setDateAndTime(){
+            let date = new Date();
+            let timeArray = [date.getHours(),date.getMinutes(),date.getSeconds()]
+            let idtimeArray =["#hour","#min","#sec"]
+            for(i in timeArray){
+                $(idtimeArray[i]).html(((timeArray[i]<10)?"0":"")+String(timeArray[i]))
+            }
+
+            if(timeArray[0]>16) {
+                $("#navbarbg").attr("src","{{url_for('static',filename='Night.png')}}") 
+                $("a div").css("box-shadow","0px 3px 4px #343434")
+            }
+            else  {
+                $("#navbarbg").attr("src","{{url_for('static',filename='Day.png')}}")
+                $("a div").css("box-shadow","0px 2px 4px gray")
+            }
+            $("#date").html(date.toDateString().split(" ").slice(1).join(" "))
+        }
+        setDateAndTime();
+        setInterval(setDateAndTime,1000)
+    </script>
+</div>

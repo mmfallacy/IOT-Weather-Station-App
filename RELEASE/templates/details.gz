@@ -1,0 +1,408 @@
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Lato|Roboto|Work+Sans:500&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> IOT Weather System</title>
+    <style>
+        html,body{
+            width:100%;
+            height:100%;
+            padding:0;
+            margin:0;
+            overflow-y: hidden;
+        }
+        h2,h5,p{
+            padding:0;
+            margin:0;
+        }
+        .details{
+            height:65%;
+            width:100%;
+            
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        .details .page-title{
+            width:50%;
+            height:20%;
+            font-family:"Roboto";
+            font-size:150%;
+            margin-top:2%;
+            margin-left:4%;
+        }
+        .page-title h2{
+            font-weight: bolder;
+        }
+        .page-title h5{
+            font-weight: lighter;
+        }
+        .info{
+            height:100%;
+            width:100%;
+            font-family: Lato;
+        }
+        .info .row{
+            height:60%;
+            width: 100%;
+            display:flex;
+            justify-content: space-evenly;
+            margin-bottom: 5%;
+        }
+        .info .row .block{
+            height:100%;
+            width:25%;
+        }
+        .info .row .block .chart{
+            height:90%;
+            width:100%;
+        }
+        .info .row .block .chart canvas{
+            /**/
+        }
+        .info .row .block .label{
+            height:10%;
+            display:flex;
+            align-items: center;
+        }
+        .info .row .block h3{
+            margin-left:1.5%;
+        }
+        .info .row  .block img{
+            margin-left:7%;
+            height:90%;
+        }
+        /* width */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        /* Track */
+        ::-webkit-scrollbar-track {
+         background: #f5f5f5; 
+        }
+        
+        /* Handle */
+        ::-webkit-scrollbar-thumb {
+          background: darkgrey; 
+        }
+
+        /* Handle on hover */
+        ::-webkit-scrollbar-thumb:hover {
+         background: grey; 
+        }
+    </style>
+</head>
+<body>
+    {% include "navbar.gz" %}
+    <div class="details">
+        <div class="page-title">
+            <h2>Details</h2>
+            <h5>Weather Now</h5>
+        </div>
+        <div class="info">
+            <div class="row">
+                <div class="block">
+                    <div class="label"><img src="{{ url_for('static',filename='icon/temp.png') }}"><h3>Temperature</h3></div>
+                    <div class="chart"><canvas id="temp"></canvas></div>
+                </div>
+                <div class="block">
+                    <div class="label"><img src="{{ url_for('static',filename='icon/pressure.png') }}"><h3>Pressure</h3></div>
+                    <div class="chart"><canvas id="press"></canvas></div>
+                </div>
+                <div class="block">
+                    <div class="label"><img src="{{ url_for('static',filename='icon/humidity.png') }}"><h3>Humidity</h3></div>
+                    <div class="chart"><canvas id="hum"></canvas></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="block">
+                    <div class="label"><img src="{{ url_for('static',filename='icon/precipitation.png') }}"><h3>Precipitation</h3></div>
+                    <div class="chart"><canvas id="precip"></canvas></div>
+                </div>
+                <div class="block">
+                    <div class="label"><img src="{{ url_for('static',filename='icon/windspeed.png') }}"><h3>Wind Speed</h3></div>
+                    <div class="chart"><canvas id="wind_spd"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        class TempChart{
+            constructor(canvas){
+                this.data = {
+                    labels:[1,2,3,4,5],
+                    datasets: [{
+                        data: [30,20,22,29,40],
+                        // Properties
+                        borderColor:"black",
+                        pointBorderColor:"black",
+                        backgroundColor:"transparent",
+                        pointBackgroundColor:"black",
+                        borderWidth: 2
+                    },
+                    {
+                        data: [40,10,2,49,50],
+                        // Properties
+                        borderColor:"gray",
+                        pointBorderColor:"gray",
+                        backgroundColor:"transparent",
+                        pointBackgroundColor:"gray",
+                        borderWidth: 2
+                    }]
+                }
+                this.options = {
+                        tooltips:{
+                            displayColors:false,
+                            xPadding:15,
+                            yPadding:10,
+                            titleFontFamily: "Lato",
+                            titleAlign: "center",
+                            bodyFontFamily: "Lato",
+                            bodyAlign: "center",
+                            callbacks:{
+                                label: (tooltipItem,data)=>{
+                                    let label = tooltipItem.yLabel;
+                                    let unitHash = ["°C","°F"];
+                                    return label + " " + unitHash[tooltipItem.datasetIndex]
+                                }
+                            }
+                        },
+                        layout:{
+                            padding:{
+                                right:4
+                            }
+                        },
+                        responsive:true,
+                        maintainAspectRatio:false,
+                        legend:{
+                            display:false
+                        },
+                        elements:{
+                            line:{
+                                tension:0
+                            }
+                        },
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true,
+                                    suggestedMin: 1,
+                                    padding:6,
+                                    fontColor:"black",
+                                    fontFamily:"Lato"
+                                    
+                                },
+                                gridLines:{
+                                    display:false,
+                                    drawTicks:false,
+                                    color:"black",
+                                }
+                            },
+                            {
+                                position: 'right',
+                                ticks: {
+                                    display: false,
+                                },
+                                gridLines:{
+                                    display: false,
+                                    drawTicks: false,
+                                    color:"black",
+                                }
+                            }],
+                            xAxes: [{
+                                ticks: {
+                                    padding:6,
+                                    display:false
+                                },
+                                gridLines:{
+                                    display:false,
+                                    drawTicks:false,
+                                    color:"black",
+                                }
+                            },{
+                                position: 'top',
+                                ticks: {
+                                    display: false
+                                },
+                                gridLines: {
+                                    display: false,
+                                    drawTicks: false,
+                                    color:"black",
+                                }
+                            }]
+                        }
+                    }
+                this.chart = new Chart(canvas,{
+                    type: "line",
+                    data: this.data,
+                    options: this.options
+                });
+            }
+            addData(title,data,index){
+                this.chart.data.labels.push(title);
+                this.chart.data.datasets[index].data.push(parseInt(data));
+                if(this.chart.data.labels.length>10){
+                    this.chart.data.labels.shift();
+                    this.chart.data.datasets[index].data.shift();
+                }
+                this.chart.update();
+            }
+            setData(title, data,index){
+                this.chart.data.labels=title;
+                this.chart.data.datasets[index].data=data;
+                this.chart.update();
+            }
+        }
+        class XChart{
+            constructor(canvas, unit){
+                this.unit = unit
+                this.data = {
+                    labels:[1,2,3,4,5],
+                    datasets: [{
+                        data: [30,20,22,29,40],
+                        // Properties
+                        borderColor:"black",
+                        pointBorderColor:"black",
+                        backgroundColor:"transparent",
+                        pointBackgroundColor:"black",
+                        borderWidth: 2
+                    }]
+                }
+                this.options = {
+                        tooltips:{
+                            displayColors:false,
+                            xPadding:15,
+                            yPadding:10,
+                            titleFontFamily: "Lato",
+                            titleAlign: "center",
+                            bodyFontFamily: "Lato",
+                            bodyAlign: "center",
+                            callbacks:{
+                                label: (tooltipItem,data)=>{
+                                    return tooltipItem.yLabel + " " + this.unit
+                                }
+                            }
+                        },
+                        layout:{
+                            padding:{
+                                right:4
+                            }
+                        },
+                        responsive:true,
+                        maintainAspectRatio:false,
+                        legend:{
+                            display:false
+                        },
+                        elements:{
+                            line:{
+                                tension:0
+                            }
+                        },
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true,
+                                    suggestedMin: 1,
+                                    padding:6,
+                                    fontColor:"black",
+                                    fontFamily:"Lato"
+                                    
+                                },
+                                gridLines:{
+                                    display:false,
+                                    drawTicks:false,
+                                    color:"black",
+                                }
+                            },
+                            {
+                                position: 'right',
+                                ticks: {
+                                    display: false,
+                                },
+                                gridLines: {
+                                    display: false,
+                                    drawTicks: false,
+                                    color:"black",
+                                }
+                            }],
+                            xAxes: [{
+                                ticks: {
+                                    padding:6,
+                                    display:false
+                                },
+                                gridLines:{
+                                    display:false,
+                                    drawTicks:false,
+                                    color:"black",
+                                }
+                            },{
+                                position: 'top',
+                                ticks: {
+                                    display: false
+                                },
+                                gridLines: {
+                                    display: false,
+                                    drawTicks: false,
+                                    color:"black",
+                                }
+                            }]
+                        }
+                    }
+                this.chart = new Chart(canvas,{
+                    type: "line",
+                    data: this.data,
+                    options: this.options
+                });
+            }
+            addData(title, data){
+                this.chart.data.labels.push(title);
+                this.chart.data.datasets[0].data.push(parseInt(data));
+                console.log(this.chart.data.labels)
+                if(this.chart.data.labels.length>10){
+                    this.chart.data.labels.shift();
+                    this.chart.data.datasets[0].data.shift();
+                }
+                this.chart.update();
+            }
+            setData(title, data){
+                this.chart.data.labels=title;
+                this.chart.data.datasets[0].data=data;
+                this.chart.update();
+            }
+        }
+        var tempChart = new TempChart($("#temp"))
+        var pressChart = new XChart($("#press"),"bar")
+        var humChart = new XChart($("#hum"),"Rh")
+        var precipChart = new XChart($("#precip"),"mm")
+        var wind_spdChart = new XChart($("#wind_spd"),"m/s")
+        var chartArray = [tempChart,tempChart,pressChart,humChart,precipChart,wind_spdChart]
+        var keyArray = ["tempC","tempF","press","hum","precip","wind_spd"]
+
+        var DATA_LOG = {{DATA_LOG|tojson}}
+        for(key in DATA_LOG){
+            let labelArr = [];
+            let dataArr =[];
+            index = keyArray.indexOf(key)
+            console.log(key, DATA_LOG, labelArr, dataArr)
+            if(key=='wind_dir') continue
+            for(el in DATA_LOG[key]){
+                labelArr.push(DATA_LOG[key][el]["time"])
+                dataArr.push(DATA_LOG[key][el]["data"])
+            }
+
+            if(index==1 || index == 0) chartArray[index].setData(labelArr,dataArr,index);
+            else chartArray[index].setData(labelArr,dataArr);
+        }
+        var socket=  io.connect("http://"+document.domain+":"+location.port+"/14yhtZxLNp6ekZAgmEmPJqEKUP2VtUxQK6")
+
+        socket.on("0x5Df9eBcFB2D0f3315d03Ac112104b9023C409dc1", (msg)=>{
+            console.log("msg received:")
+            console.log(msg)
+            let index = keyArray.indexOf(msg["data"][0]);
+            if(msg["data"][0]=="tempC") $("#largetempC").html(msg["data"][1]);
+            if(index==1 || index == 0) chartArray[index].addData(msg["time"],msg["data"][1],index);
+            else if(msg["data"][0]!="wind_dir") chartArray[index].addData(msg["time"],msg["data"][1]);
+        })
+    </script>
+</body>
+</html>
